@@ -1,12 +1,13 @@
 package pl.coderslab;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -75,12 +76,35 @@ public class WarsztatKamilWyjadlowski {
 
     private static void dodaj() {
         Scanner scanner = new Scanner(System.in);
+
         System.out.println("Please add task description");
         String description = scanner.nextLine();
-        System.out.println("Please add task due date");
-        String date = scanner.nextLine();
+
+        boolean isDateValid = false;
+        String date = "";
+        while (!isDateValid) {
+            System.out.println("Please add task due date (yyyy-mm-dd)");
+            date = scanner.nextLine();
+            isDateValid = poprawnaData(date);
+
+            if (!isDateValid) {
+                System.out.println("Invalid date format. Please enter a valid date.");
+            }
+        }
+
         System.out.println("Is your task important: true/false");
-        String important = scanner.nextLine();
+        boolean poprawnyBoolean = false;
+        String important = "";
+        while (!poprawnyBoolean) {
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("true") || input.equalsIgnoreCase("false")) {
+                important = input;
+                poprawnyBoolean = true;
+            } else {
+                System.out.println("Write true or false");
+            }
+        }
+
         tasks = Arrays.copyOf(tasks, tasks.length + 1);
         tasks[tasks.length - 1] = new String[3];
         tasks[tasks.length - 1][0] = description;
@@ -88,13 +112,37 @@ public class WarsztatKamilWyjadlowski {
         tasks[tasks.length - 1][2] = important;
     }
 
-    private static void usun(String[][] tab, int index) {
+    private static boolean poprawnaData(String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
+
         try {
-            if (index < tab.length) {
-                tasks = ArrayUtils.remove(tab, index);
+            dateFormat.parse(date);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    private static void usun(String[][] tab, int index) {
+        index -= 1;
+        boolean isIndexValid = index >= 0 && index < tab.length;
+
+        while (!isIndexValid) {
+            System.out.println("Invalid index. Please provide a valid index.");
+            index = numer() - 1;
+            isIndexValid = index >= 0 && index < tab.length;
+        }
+        tasks = ArrayUtils.remove(tab, index);
+    }
+
+    public static void lista(String[][] tab) {
+        for (int i = 0; i < tab.length; i++) {
+            System.out.print((i + 1) + " : ");
+            for (int j = 0; j < tab[i].length; j++) {
+                System.out.print(tab[i][j] + " ");
             }
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            System.out.println("Element not exist in tab");
+            System.out.println();
         }
     }
 
@@ -102,22 +150,11 @@ public class WarsztatKamilWyjadlowski {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please select number to remove.");
 
-        String n = scanner.nextLine();
-        while (!isNumberGreaterEqualZero(n)) {
-            System.out.println("Incorrect argument passed. Please give number greater or equal 0");
-            scanner.nextLine();
+        while (!scanner.hasNextInt()) {
+            scanner.next();
+            System.out.println("Select right rowe number");
         }
-        return Integer.parseInt(n);
-    }
-
-    public static void lista(String[][] tab) {
-        for (int i = 0; i < tab.length; i++) {
-            System.out.print(i + " : ");
-            for (int j = 0; j < tab[i].length; j++) {
-                System.out.print(tab[i][j] + " ");
-            }
-            System.out.println();
-        }
+        return scanner.nextInt();
     }
 
     public static void zapisz(String fileName, String[][] tab) {
@@ -134,12 +171,4 @@ public class WarsztatKamilWyjadlowski {
             ex.printStackTrace();
         }
     }
-
-    public static boolean isNumberGreaterEqualZero(String input) {
-        if (NumberUtils.isParsable(input)) {
-            return Integer.parseInt(input) >= 0;
-        }
-        return false;
-    }
 }
-
